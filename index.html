@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0b1220">
+<title>Exness XAUUSD Risk Calculator</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#0b1220;color:#f8fafc;font-family:Inter,Arial,sans-serif;padding:14px}
+.app{max-width:600px;margin:auto}.card{background:#111a2b;border:1px solid #26334a;border-radius:22px;padding:18px;margin-bottom:14px}
+.badge{display:inline-block;font-size:11px;padding:5px 8px;border-radius:99px;background:#1e293b;color:#cbd5e1;margin-bottom:10px}
+h1{font-size:25px;margin:0 0 6px}h2{font-size:18px;margin:0 0 5px}.sub,.note{color:#94a3b8;font-size:13px;line-height:1.5}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}label{display:block;color:#cbd5e1;font-size:13px;margin-bottom:7px}
+input,select{width:100%;padding:13px;border-radius:11px;border:1px solid #334155;background:#0b1220;color:#fff;font-size:16px;outline:none}
+input:focus,select:focus{border-color:#facc15}.full{grid-column:1/-1}
+button{width:100%;padding:14px;border:0;border-radius:12px;background:#facc15;color:#111827;font-size:17px;font-weight:800;cursor:pointer;margin-top:16px}
+.results{margin-top:16px;display:grid;gap:9px}.row{display:flex;justify-content:space-between;gap:15px;background:#0b1220;border-radius:11px;padding:12px}
+.row span:first-child{color:#94a3b8}.row span:last-child{font-weight:700;text-align:right}.good{color:#4ade80!important}.warn{color:#fb7185!important}
+.note{margin-top:13px}hr{border:0;border-top:1px solid #26334a;margin:18px 0}.small{font-size:12px;color:#64748b}
+@media(max-width:430px){body{padding:10px}.card{padding:15px}.grid{grid-template-columns:1fr}.full{grid-column:auto}}
+</style>
+</head>
+<body>
+<div class="app">
+
+<div class="card">
+  <div class="badge">EXNESS • XAUUSD</div>
+  <h1>Gold Risk & Trade Planner</h1>
+  <div class="sub">Built around Exness XAUUSD specifications: 100 troy oz contract size, 0.01 lot minimum and 0.01 price/pip size.</div>
+
+  <div class="grid">
+    <div><label>Account Balance ($)</label><input id="balance" type="number" value="20" min="0.01" step="0.01"></div>
+    <div><label>Risk Per Trade (%)</label><input id="riskPct" type="number" value="1" min="0.01" step="0.1"></div>
+    <div><label>Entry Price</label><input id="entry" type="number" step="0.01" placeholder="e.g. 3750"></div>
+    <div><label>Stop Loss Price</label><input id="sl" type="number" step="0.01" placeholder="e.g. 3745"></div>
+    <div><label>Take Profit Price</label><input id="tp" type="number" step="0.01" placeholder="e.g. 3760"></div>
+    <div><label>Direction</label><select id="direction"><option value="buy">BUY</option><option value="sell">SELL</option></select></div>
+    <div><label>Account Type</label><select id="accountType"><option value="standard">Standard / Standard Cent</option><option value="pro">Pro</option><option value="raw">Raw Spread</option><option value="zero">Zero</option></select></div>
+  </div>
+  <button id="calcBtn">Calculate Trade</button>
+  <div id="results" class="results"></div>
+  <div class="note">Exness XAUUSD contract size is fixed at 100 troy ounces and minimum volume is 0.01 lot. Raw Spread and Zero commissions are included as estimates using Exness's published per-lot, per-side rates. Standard/Pro have no trading commission.</div>
+</div>
+
+<div class="card">
+  <div class="badge">BACKWARD PLANNER</div>
+  <h2>Start With Your Desired Profit</h2>
+  <div class="sub">This calculates levels mathematically from a chosen entry. It does not predict where the market will go.</div>
+  <div class="grid">
+    <div><label>Entry Price</label><input id="pEntry" type="number" step="0.01" placeholder="e.g. 3750"></div>
+    <div><label>Direction</label><select id="pDirection"><option value="buy">BUY</option><option value="sell">SELL</option></select></div>
+    <div><label>Desired Net Profit ($)</label><input id="desiredProfit" type="number" min="0.01" step="0.01" placeholder="e.g. 1"></div>
+    <div><label>Lot Size</label><input id="pLot" type="number" min="0.01" step="0.01" value="0.01"></div>
+    <div><label>Risk : Reward</label><input id="pRR" type="number" min="0.1" step="0.1" value="2"></div>
+    <div><label>Account Type</label><select id="pAccountType"><option value="standard">Standard / Standard Cent</option><option value="pro">Pro</option><option value="raw">Raw Spread</option><option value="zero">Zero</option></select></div>
+  </div>
+  <button id="planBtn">Generate Levels</button>
+  <div id="planResults" class="results"></div>
+</div>
+
+<div class="card">
+  <h2>Exness XAUUSD Specifications</h2>
+  <div class="results">
+    <div class="row"><span>Contract size</span><span>100 troy oz</span></div>
+    <div class="row"><span>Pip / price size</span><span>0.01</span></div>
+    <div class="row"><span>Minimum volume</span><span>0.01 lot</span></div>
+    <div class="row"><span>Maximum volume</span><span>200 lots</span></div>
+    <div class="row"><span>Raw Spread commission</span><span>$3.50 / lot / side</span></div>
+    <div class="row"><span>Zero commission</span><span>$5.50 / lot / side</span></div>
+  </div>
+  <div class="note">Leverage and margin can vary by eligibility and high-margin periods. The calculator does not assume that unlimited leverage means you should use unlimited leverage.</div>
+  <div class="small">Always verify live symbol specifications in your Exness trading platform before placing an order.</div>
+</div>
+
+</div>
+
+<script>
+(() => {
+  const $=id=>document.getElementById(id);
+  const money=n=>"$"+n.toFixed(2);
+  const commissionPerLotSide={standard:0,pro:0,raw:3.5,zero:5.5};
+
+  function commission(lots,type,roundTrip=true){
+    return commissionPerLotSide[type]*lots*(roundTrip?2:1);
+  }
+
+  function calc(){
+    const balance=+$("balance").value,riskPct=+$("riskPct").value,entry=+$("entry").value,sl=+$("sl").value,tp=+$("tp").value;
+    const dir=$("direction").value,type=$("accountType").value,out=$("results");
+    if([balance,riskPct,entry,sl,tp].some(v=>!Number.isFinite(v)||v<=0)){
+      out.innerHTML='<div class="row"><span>Status</span><span class="warn">Enter valid values.</span></div>';return;
+    }
+    const valid=dir==="buy"?(sl<entry&&tp>entry):(sl>entry&&tp<entry);
+    if(!valid){out.innerHTML='<div class="row"><span>Status</span><span class="warn">Your BUY/SELL levels are inconsistent.</span></div>';return;}
+    const allowed=balance*riskPct/100;
+    const slDist=Math.abs(entry-sl),tpDist=Math.abs(tp-entry);
+    const grossLossPerLot=slDist*100,grossProfitPerLot=tpDist*100;
+    const maxLotsByRisk=(allowed-commissionPerLotSide[type]*2*0.01)/(grossLossPerLot+commissionPerLotSide[type]*2);
+    const rawLot=allowed/(grossLossPerLot+commissionPerLotSide[type]*2);
+    const lot=Math.floor(Math.max(0,rawLot)*100)/100;
+    const actualGrossProfit=lot*grossProfitPerLot;
+    const actualGrossLoss=lot*grossLossPerLot;
+    const comm=commission(lot,type);
+    const netProfit=actualGrossProfit-comm,netLoss=actualGrossLoss+comm;
+    const rr=netProfit/netLoss;
+    const minWarning=lot<0.01;
+    out.innerHTML=`
+      <div class="row"><span>Risk budget</span><span>${money(allowed)}</span></div>
+      <div class="row"><span>Recommended lot</span><span class="${minWarning?'warn':'good'}">${lot.toFixed(2)}</span></div>
+      <div class="row"><span>Minimum lot</span><span>0.01</span></div>
+      <div class="row"><span>Gross profit at TP</span><span>+${money(actualGrossProfit)}</span></div>
+      <div class="row"><span>Gross loss at SL</span><span>-${money(actualGrossLoss)}</span></div>
+      <div class="row"><span>Round-trip commission</span><span>${money(comm)}</span></div>
+      <div class="row"><span>Net profit at TP</span><span class="good">+${money(netProfit)}</span></div>
+      <div class="row"><span>Net loss at SL</span><span class="warn">-${money(netLoss)}</span></div>
+      <div class="row"><span>Net R:R</span><span>${netLoss>0?(netProfit/netLoss).toFixed(2):'—'} : 1</span></div>
+      <div class="row"><span>Status</span><span class="${minWarning?'warn':'good'}">${minWarning?'Risk budget is too small for a 0.01-lot trade at this SL.':'Position fits your risk budget.'}</span></div>`;
+  }
+
+  function plan(){
+    const entry=+$("pEntry").value,desired=+$("desiredProfit").value,lot=+$("pLot").value,rr=+$("pRR").value,type=$("pAccountType").value,dir=$("pDirection").value,out=$("planResults");
+    if([entry,desired,lot,rr].some(v=>!Number.isFinite(v)||v<=0)||lot<0.01){
+      out.innerHTML='<div class="row"><span>Status</span><span class="warn">Enter valid values. Minimum lot is 0.01.</span></div>';return;
+    }
+    const comm=commission(lot,type);
+    const grossTarget=desired+comm;
+    const tpDist=grossTarget/(lot*100);
+    const netRisk=desired/rr;
+    const grossRisk=netRisk+comm;
+    const slDist=grossRisk/(lot*100);
+    const tp=dir==="buy"?entry+tpDist:entry-tpDist;
+    const sl=dir==="buy"?entry-slDist:entry+slDist;
+    out.innerHTML=`
+      <div class="row"><span>Entry</span><span>${entry.toFixed(2)}</span></div>
+      <div class="row"><span>Stop Loss</span><span class="warn">${sl.toFixed(2)}</span></div>
+      <div class="row"><span>Take Profit</span><span class="good">${tp.toFixed(2)}</span></div>
+      <div class="row"><span>TP distance</span><span>${tpDist.toFixed(2)}</span></div>
+      <div class="row"><span>SL distance</span><span>${slDist.toFixed(2)}</span></div>
+      <div class="row"><span>Round-trip commission</span><span>${money(comm)}</span></div>
+      <div class="row"><span>Net target profit</span><span class="good">+${money(desired)}</span></div>
+      <div class="row"><span>Net risk at SL</span><span class="warn">-${money(netRisk)}</span></div>
+      <div class="row"><span>Net R:R</span><span class="good">${rr.toFixed(2)} : 1</span></div>`;
+  }
+
+  $("calcBtn").addEventListener("click",calc);
+  $("planBtn").addEventListener("click",plan);
+  ["entry","sl","tp"].forEach(id=>$(id).addEventListener("keydown",e=>{if(e.key==="Enter")calc()}));
+  ["pEntry","desiredProfit","pLot","pRR"].forEach(id=>$(id).addEventListener("keydown",e=>{if(e.key==="Enter")plan()}));
+})();
+</script>
+</body>
+</html>
